@@ -1,10 +1,12 @@
 from collections import Counter
 import numpy as np
+import sys
 
+#sys.setrecursionlimit(100000)
 
 def read_file():
     lista = []
-    for i in open('dados/dados_ex.txt'):
+    for i in open('dados/dados_teste.txt'):
         line = i.split(' ')[0:3]
         line[2] = line[2].replace('\n', '')
         lista.append(line)
@@ -37,22 +39,35 @@ def iteraction(cost_map, start_n, end_n):
 
 "Checks if this is possibe or not to get from the first to the last node"
 def is_path_possible(cost_map, visited, start_n, end_n):
-    visited = []
     for row in cost_map[slice(start_n-1, end_n)]:
+        visited.append(row[0])               #Add the node index to visited
         for n, i in enumerate(row[1:]):
-            if i > 0:
-                visited.append(row[0])
+            print('\nnode: ', n+1)
+            print('cost: ', i)
+            print('visited: ', visited)
+
+            if i > 0 and (n+1) not in visited: #Cost is greater than 0 and the node index was not visited
+                print('cost accepted: ', i)
+                if (n+1) == end_n: #node index is equal to the end node
+                    return True
+                else:
+                    if is_path_possible(cost_map, visited.copy(), start_n + n, end_n): #Checks starting from the node index where a connection was found
+                        return True
+    return False
 
 
 data_list = read_file()
+print('Data list: ', data_list)
 all_nodes = np.concatenate([data_list[:, 0], data_list[:, 1]])
 node_dict = Counter(all_nodes).keys()
 node_number = len(node_dict)
 print('Nodes: ', node_dict)
 data_map = create_dictionary(data_list, list(node_dict))
-print(data_map)
+print('\nData Map: ')
+for i in data_map:
+    print(i)
 data_map = np.array(data_map)
 start_node = min(data_map[:, 0])
 last_node = max(np.array(data_map)[:, 0])
 print('start: ', start_node, ' last: ', last_node)
-is_path_possible(data_map, [], start_node, last_node)
+print('Is path possible: ', is_path_possible(data_map, [], start_node, last_node))
