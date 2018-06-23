@@ -39,6 +39,7 @@ def iteraction(cost_map, start_n, end_n):
         i = 0
         connections = []
         visited = []
+        last_valid = 0
         while i + 1 != end_n:
             print('\ni: ', i)
             print('visited:', visited)
@@ -46,36 +47,50 @@ def iteraction(cost_map, start_n, end_n):
             node = cost_map[i][0]
             row = cost_map[i]
             for index, cost in enumerate(row[1:]):
-                print('index: ', index,  ' cost: ', cost)
+                #print('index: ', index,  ' cost: ', cost)
                 if cost > 0 and index not in visited:
-                    print('added')
+                    #print('added')
                     s_local.append([index+1, cost])
             print('s_local: ', s_local)
-            if not s_local:
-                return cost_map
-            np_array_local = np.array(s_local)
-            n, con_val = max(np_array_local, key=operator.itemgetter(1))
-            print('nodo: ', n, 'max: ', con_val)
-            s_global.append(con_val)
-            connections.append([node, n])
-            visited.append(i)
-            i = n - 1
+            if not s_local and last_valid != i:
+                visited.append(i)
+                i = last_valid
+                connections.pop()
 
-        print('***min: ', min(s_global))
+            elif not s_local and last_valid == i:
+                return cost_map
+            else:
+                np_array_local = np.array(s_local)
+                n, con_val = max(np_array_local, key=operator.itemgetter(1))
+                print('nodo: ', n, 'max: ', con_val)
+                s_global.append(con_val)
+                connections.append([node, n])
+                visited.append(i)
+                last_valid = i
+                i = n - 1
+
+        min_cost =  min(s_global)
+        print('***min: ', min_cost)
         print('***connections: ', connections)
-        update_connections(cost_map, connections, con_val)
+        update_connections(cost_map, connections, min_cost)
     print(cost_map)
 
 
 def update_connections(cost_map, connections, value):
+    old_cost = cost_map.copy()
+    print('\nvalue: ', value)
     for con in connections:
         print('con: ', con)
         row = cost_map[con[0] - 1][1:]  #nodo
-        print('row: ', row)
+        print('1 - row before: ', row)
         row[con[1] - 1] = row[con[1] - 1] - value
+        print('1 - row after:  ', row)
         row = cost_map[con[1] - 1][1:]  #nodo
+        print('2 - row before: ', row)
         row[con[0] - 1] = row[con[0] - 1] + value
-    print('updated cost_map: ', cost_map, '\n')
+        print('2 - row after:  ', row)
+    print('old cost map: \n', old_cost, '\n')
+    print('updated cost_map:\n ', cost_map, '\n')
 
 
 "Checks if this is possible or not to get from the first to the last node"
@@ -83,35 +98,44 @@ def is_path_possible(cost_map, visited, start_n, end_n):
     for row in cost_map[slice(start_n-1, end_n)]:
         visited.append(row[0])               #Add the node index to visited
         for n, i in enumerate(row[1:]):
-            print('\nnode: ', n+1)
-            print('cost: ', i)
-            print('visited: ', visited)
+           #print('\nnode: ', n+1)
+           #print('cost: ', i)
+           #print('visited: ', visited)
 
             if i > 0 and (n+1) not in visited: #Cost is greater than 0 and the node index was not visited
-                print('cost accepted: ', i)
+                #print('cost accepted: ', i)
                 if (n+1) == end_n: #node index is equal to the end node
                     return True
                 else:
                     if is_path_possible(cost_map, visited.copy(), start_n + n, end_n): #Checks starting from the node index where a connection was found
-                        print('true')
+                        #print('true')
                         return True
-    print('false')
+    #print('false')
     return False
 
 
+def get_result(cost_map, end_node):
+    total_cost = 0
+    for i in cost_map[end_node - 1][1:]:
+        if i > 0:
+            total_cost += i
+
+    return total_cost
+
 data_list = read_file()
-print('Data list: ', data_list)
+print('Data list:\n ', data_list)
 all_nodes = np.concatenate([data_list[:, 0], data_list[:, 1]])
 node_dict = Counter(all_nodes).keys()
 node_number = len(node_dict)
 print('Nodes: ', node_dict)
 data_map = create_dictionary(data_list, list(node_dict))
 print('\nData Map: ')
-for i in data_map:
-    print(i)
+for l in data_map:
+    print(l)
 data_map = np.array(data_map)
 start_node = min(data_map[:, 0])
 last_node = max(np.array(data_map)[:, 0])
 print('start: ', start_node, ' last: ', last_node)
 #print('Is path possible: ', is_path_possible(data_map, [], start_node, last_node))
-print(iteraction(data_map, start_node, last_node))
+result = iteraction(data_map, start_node, last_node)
+print('Resultado: ', get_result(result, last_node))
