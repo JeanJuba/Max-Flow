@@ -4,7 +4,7 @@ import operator
 
 def read_file():
     lista = []
-    for i in open('dados/dados_exemplo1.txt'):
+    for i in open('dados/dados_exemplo2.txt'):
         line = i.split(' ')[0:3]
         line[2] = line[2].replace('\n', '')
         lista.append(line)
@@ -39,7 +39,7 @@ def iteraction(cost_map, start_n, end_n):
         i = 0
         connections = []
         visited = []
-        last_valid = 0
+        last_valid = [0]
         while i + 1 != end_n:
             print('\ni: ', i)
             print('visited:', visited)
@@ -52,21 +52,30 @@ def iteraction(cost_map, start_n, end_n):
                     #print('added')
                     s_local.append([index+1, cost])
             print('s_local: ', s_local)
-            if not s_local and last_valid != i:
+            if not s_local and last_valid[-1] != i:
                 visited.append(i)
-                i = last_valid
+                i = last_valid[-1]
                 connections.pop()
+                s_global.pop()
 
-            elif not s_local and last_valid == i:
+            elif not s_local and last_valid[-1] == i:
+                print('i: ', i)
+                print('last_valid: ', last_valid)
+                print('global: ', s_global)
                 return cost_map
             else:
+                print('s_local before: ', s_local)
+                #remove_dead_ends(cost_map, s_local, visited.copy())
+                if not s_local:
+                    return cost_map
+                print('s_local after: ', s_local)
                 np_array_local = np.array(s_local)
                 n, con_val = max(np_array_local, key=operator.itemgetter(1))
                 print('nodo: ', n, 'max: ', con_val)
                 s_global.append(con_val)
                 connections.append([node, n])
                 visited.append(i)
-                last_valid = i
+                last_valid.append(i)
                 i = n - 1
 
         min_cost =  min(s_global)
@@ -114,6 +123,31 @@ def is_path_possible(cost_map, visited, start_n, end_n):
     return False
 
 
+def remove_dead_ends(cost_map, s_local=[], visitados=[]):
+    print('temp s_local: ', s_local)
+    print('visitados: ', visitados)
+    for index, max_pos in enumerate(s_local):
+        i = max_pos[0] - 1
+        s_connec = []
+        print('index: ', i)
+        for n, cost in enumerate(cost_map[i][1:]):
+            if cost > 0 and n != i and n not in visitados:#custo maior q 0 e nao for ele mesmo
+                s_connec.append([n + 1, cost])
+
+        print('s_connect: ', s_connec)
+        if i not in visitados:
+            visitados.append(i)
+        print('\n *** remove dead ends ***')
+        if not s_connec or not remove_dead_ends(cost_map, s_connec, visitados):
+            if len(s_local) > 0:
+                print('index to remove: ', index)
+                print(s_local)
+                s_local.pop(index)
+            return s_local
+
+    return s_local
+
+
 def get_result(cost_map, end_node):
     total_cost = 0
     for i in cost_map[end_node - 1][1:]:
@@ -138,4 +172,5 @@ last_node = max(np.array(data_map)[:, 0])
 print('start: ', start_node, ' last: ', last_node)
 #print('Is path possible: ', is_path_possible(data_map, [], start_node, last_node))
 result = iteraction(data_map, start_node, last_node)
+print(result)
 print('Resultado: ', get_result(result, last_node))
