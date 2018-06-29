@@ -1,11 +1,8 @@
+import operator
+
 def changer(list = []):
     list[:] = [x * 10 for x in list]
     print('List inside method: ', list)
-
-'''a = [x * 2 for x in [1,2,3,4]]
-print('List before method: ', a)
-changer(a)
-print('List after method: ', a)'''
 
 
 def find_max(cost_map, i, visited=[]):
@@ -45,10 +42,43 @@ def remove_dead_ends(cost_map, s_local=[], visitados=[]):
     return s_local
 
 
-cost = [[ 1,  0,  7,  0,  0,  4],
- [ 2, 1,  0,  9,  2,  6],
- [ 3, 14,  6,  0,  9,  0],
- [ 4,  0, 11,  7,  0,  0],
- [ 5,  0,  0, 10,  5,  0]]
+def is_dead_end(costs, node, visited, end_node ):
+    print('\nNode: ', node)
+    local_connections = []
+    dead_end = True
+    list = costs[node][1:].copy()
 
-find_max(cost, 1, [0])
+    while len(list) > 0:
+
+        for index, cost in enumerate(list):
+            if cost > 0 and index not in visited:
+                local_connections.append([index, cost])
+
+        print('Local connections: ', local_connections)
+        if len(local_connections) == 0:
+            return True
+
+        i, maximum = max(local_connections, key = operator.itemgetter(1))
+        print('i: ', i, 'Max: ', maximum)
+
+        if i == end_node:
+            return False
+        else:
+            visited.append(node)
+            if not is_dead_end(costs, i, visited.copy(), end_node):
+                return False;
+            else:
+                n = visited.pop(-1)
+                print('n: ', n)
+                print('before pop: ', list)
+                list.pop(n)
+                print('after pop: ', list)
+
+    return True
+
+cost = \
+[[ 1, 0,  3,  2],
+ [ 2, 0,  0,  0],
+ [ 3, 0,  0,  1]]
+
+print(is_dead_end(cost, 0, [0], 2))

@@ -2,6 +2,7 @@ from collections import Counter
 import numpy as np
 import operator
 
+
 def read_file():
     lista = []
     for i in open('dados/dados_exemplo2.txt'):
