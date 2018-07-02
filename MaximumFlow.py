@@ -35,7 +35,7 @@ def create_dictionary(raw_data, raw_nodes):
 
 
 def iteraction(cost_map, start_n, end_n):
-    while is_path_possible(cost_map, [].copy(), start_node, end_n):
+    while is_path_possible(cost_map, [].copy(), start_n, end_n):
         print('entrou')
         s_global = []
         i = 0
@@ -85,25 +85,28 @@ def update_connections(cost_map, connections, value):
 "Checks if this is possible or not to get from the first to the last node"
 def is_path_possible(cost_map, visited, start_n, end_n):
 
-    #if not np.any(cost_map[slice(start_n, end_n)]):
-        #return False
-
     for row in cost_map[slice(start_n-1, end_n)]:
         #print('row: ', row)
         visited.append(row[0])               #Add the node index to visited
         for n, i in enumerate(row[1:]):
+            found_any = False
            #print('\nnode: ', n+1)
            #print('cost: ', i)
            #print('visited: ', visited)
             #print('i: ', i, ' visited: ', visited)
             if i > 0 and (n+1) not in visited: #Cost is greater than 0 and the node index was not visited
-                #print('cost accepted: ', i)
+                found_any = True
+                print('n: ',n ,' cost accepted: ', i)
                 if (n+1) == end_n: #node index is equal to the end node
+                    print('****Path possible: true')
                     return True
                 else:
                     if is_path_possible(cost_map, visited.copy(), start_n + n, end_n): #Checks starting from the node index where a connection was found
                         print('****Path possible: true')
                         return True
+        if not found_any:
+            print('****Path possible: false, found none')
+            return False
     print('****Path possible: false')
     return False
 
