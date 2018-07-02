@@ -40,49 +40,27 @@ def iteraction(cost_map, start_n, end_n):
         i = 0
         connections = []
         visited = []
-        last_valid = [0]
+
         while i + 1 != end_n:
             print('\ni: ', i)
             print('visited:', visited)
-            s_local = []
             node = cost_map[i][0]
-            row = cost_map[i]
-            for index, cost in enumerate(row[1:]):
-                #print('index: ', index,  ' cost: ', cost)
-                if cost > 0 and index not in visited:
-                    #print('added')
-                    s_local.append([index+1, cost])
-            print('s_local: ', s_local)
-            if not s_local and last_valid[-1] != i:
-                visited.append(i)
-                i = last_valid[-1]
-                connections.pop()
-                s_global.pop()
+            row = cost_map[i][1:]
+            print('row list: ', row)
 
-            elif not s_local and last_valid[-1] == i:
-                print('i: ', i)
-                print('last_valid: ', last_valid)
-                print('global: ', s_global)
-                return cost_map
-            else:
-                print('s_local before: ', s_local)
-                #remove_dead_ends(cost_map, s_local, visited.copy())
-                if not s_local:
-                    return cost_map
-                print('s_local after: ', s_local)
-                np_array_local = np.array(s_local)
-                n, con_val = max(np_array_local, key=operator.itemgetter(1))
-                print('nodo: ', n, 'max: ', con_val)
-                s_global.append(con_val)
-                connections.append([node, n])
-                visited.append(i)
-                last_valid.append(i)
-                i = n - 1
+            row_max = is_dead_end(cost_map, i, visited.copy(), end_n-1)
+            print('row: ', i, ' row_max: ', row_max)
+
+            s_global.append(row[row_max])
+            connections.append([node, row_max])
+            visited.append(i)
+            i = row_max
 
         min_cost =  min(s_global)
         print('***min: ', min_cost)
         print('***connections: ', connections)
         update_connections(cost_map, connections, min_cost)
+        exit()
     print(cost_map)
 
 
@@ -92,14 +70,14 @@ def update_connections(cost_map, connections, value):
     for con in connections:
         print('con: ', con)
         row = cost_map[con[0] - 1][1:]  #nodo
-        print('1 - row before: ', row)
+        #print('1 - row before: ', row)
         row[con[1] - 1] = row[con[1] - 1] - value
-        print('1 - row after:  ', row)
+        #print('1 - row after:  ', row)
         row = cost_map[con[1] - 1][1:]  #nodo
-        print('2 - row before: ', row)
+        #print('2 - row before: ', row)
         row[con[0] - 1] = row[con[0] - 1] + value
-        print('2 - row after:  ', row)
-    print('old cost map: \n', old_cost, '\n')
+        #print('2 - row after:  ', row)
+    #print('old cost map: \n', old_cost, '\n')
     print('updated cost_map:\n ', cost_map, '\n')
 
 
@@ -124,29 +102,39 @@ def is_path_possible(cost_map, visited, start_n, end_n):
     return False
 
 
-def remove_dead_ends(cost_map, s_local=[], visitados=[]):
-    print('temp s_local: ', s_local)
-    print('visitados: ', visitados)
-    for index, max_pos in enumerate(s_local):
-        i = max_pos[0] - 1
-        s_connec = []
-        print('index: ', i)
-        for n, cost in enumerate(cost_map[i][1:]):
-            if cost > 0 and n != i and n not in visitados:#custo maior q 0 e nao for ele mesmo
-                s_connec.append([n + 1, cost])
+def is_dead_end(costs, node, visited, end_node ):
+    print('\nNode: ', node)
+    visited.append(node)
+    print('Visited: ', visited)
+    local_connections = []
+    #dead_end = True
+    list = np.array(costs[node][1:].copy())
+    print('list: ', list)
+    while np.any(list):
+        local_connections = []
+        for index, cost in enumerate(list):
+            if cost > 0 and index not in visited:
+                local_connections.append([index, cost])
 
-        print('s_connect: ', s_connec)
-        if i not in visitados:
-            visitados.append(i)
-        print('\n *** remove dead ends ***')
-        if not s_connec or not remove_dead_ends(cost_map, s_connec, visitados):
-            if len(s_local) > 0:
-                print('index to remove: ', index)
-                print(s_local)
-                s_local.pop(index)
-            return s_local
+        print('Local connections: ', local_connections)
+        if len(local_connections) == 0:
+            print('len(local_connections) == 0')
+            return []
 
-    return s_local
+        i, maximum = max(local_connections, key = operator.itemgetter(1))
+        print('i: ', i, 'Max: ', maximum)
+
+        if i == end_node:
+            print('reached end_node')
+            return i
+        else:
+            visited.append(i)
+            if not is_dead_end(costs, i, visited.copy(), end_node):
+                list[i] = 0
+            else:
+                return i
+    print('all zero')
+    return []
 
 
 def get_result(cost_map, end_node):

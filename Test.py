@@ -1,4 +1,5 @@
 import operator
+import numpy as np
 
 def changer(list = []):
     list[:] = [x * 10 for x in list]
@@ -44,41 +45,52 @@ def remove_dead_ends(cost_map, s_local=[], visitados=[]):
 
 def is_dead_end(costs, node, visited, end_node ):
     print('\nNode: ', node)
+    visited.append(node)
+    print('Visited: ', visited)
     local_connections = []
-    dead_end = True
-    list = costs[node][1:].copy()
-
-    while len(list) > 0:
-
+    #dead_end = True
+    list = np.array(costs[node][1:].copy())
+    print('list: ', list)
+    while np.any(list):
+        local_connections = []
         for index, cost in enumerate(list):
             if cost > 0 and index not in visited:
                 local_connections.append([index, cost])
 
         print('Local connections: ', local_connections)
         if len(local_connections) == 0:
-            return True
+            print('len(local_connections) == 0')
+            return []
 
         i, maximum = max(local_connections, key = operator.itemgetter(1))
         print('i: ', i, 'Max: ', maximum)
 
         if i == end_node:
-            return False
+            print('reached end_node')
+            return i
         else:
-            visited.append(node)
+            visited.append(i)
             if not is_dead_end(costs, i, visited.copy(), end_node):
-                return False;
+                list[i] = 0
             else:
-                n = visited.pop(-1)
-                print('n: ', n)
-                print('before pop: ', list)
-                list.pop(n)
-                print('after pop: ', list)
+                return i
+    print('all zero')
+    return []
 
-    return True
+'''cost = \
+[[ 1, 0,  3,  2, 1, 0],
+ [ 2, 0,  0,  1, 0, 0],
+ [ 3, 0,  3,  0, 2, 1],
+ [ 4, 0,  5,  0, 0, 0],
+ [ 5, 0,  0,  0, 0, 0]]'''
 
-cost = \
-[[ 1, 0,  3,  2],
- [ 2, 0,  0,  0],
- [ 3, 0,  0,  1]]
+cost = [[1, 0, 8, 0, 0, 4],
+        [2, 0, 0, 10, 2, 6],
+        [3, 14, 5, 0, 9, 1],
+        [4, 0, 11, 7, 0, 0],
+        [5, 0, 0, 9, 5, 0]]
 
-print(is_dead_end(cost, 0, [0], 2))
+print(is_dead_end(cost, 2, [0, 1], 4))
+
+#print('cost: ', cost)
+
