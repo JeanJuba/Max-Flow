@@ -36,32 +36,33 @@ def create_dictionary(raw_data, raw_nodes):
 
 def iteraction(cost_map, start_n, end_n):
     while is_path_possible(cost_map, [].copy(), start_node, end_n):
+        print('entrou')
         s_global = []
         i = 0
         connections = []
         visited = []
 
         while i + 1 != end_n:
-            print('\ni: ', i)
-            print('visited:', visited)
+            #print('\ni: ', i)
+            #print('visited:', visited)
             node = cost_map[i][0]
             row = cost_map[i][1:]
-            print('row list: ', row)
-
-            row_max = is_dead_end(cost_map, i, visited.copy(), end_n-1)
-            print('row: ', i, ' row_max: ', row_max)
-
+            #print('row list: ', row)
+            row_max = get_row_max(cost_map, i, visited.copy(), end_n-1)
+            #print('****row: ', i, ' row_max_index: ', row_max, ' row_max_val: ', row[row_max])
             s_global.append(row[row_max])
-            connections.append([node, row_max])
+            connections.append([node, row_max + 1])
             visited.append(i)
             i = row_max
 
-        min_cost =  min(s_global)
-        print('***min: ', min_cost)
-        print('***connections: ', connections)
+        min_cost = min(s_global)
+        #print('s_global: ', s_global)
+        #print('***min: ', min_cost)
+        #print('***connections: ', connections)
         update_connections(cost_map, connections, min_cost)
-        exit()
-    print(cost_map)
+        #exit()
+    #print(cost_map)
+    return cost_map
 
 
 def update_connections(cost_map, connections, value):
@@ -83,57 +84,62 @@ def update_connections(cost_map, connections, value):
 
 "Checks if this is possible or not to get from the first to the last node"
 def is_path_possible(cost_map, visited, start_n, end_n):
+
+    #if not np.any(cost_map[slice(start_n, end_n)]):
+        #return False
+
     for row in cost_map[slice(start_n-1, end_n)]:
+        #print('row: ', row)
         visited.append(row[0])               #Add the node index to visited
         for n, i in enumerate(row[1:]):
            #print('\nnode: ', n+1)
            #print('cost: ', i)
            #print('visited: ', visited)
-
+            #print('i: ', i, ' visited: ', visited)
             if i > 0 and (n+1) not in visited: #Cost is greater than 0 and the node index was not visited
                 #print('cost accepted: ', i)
                 if (n+1) == end_n: #node index is equal to the end node
                     return True
                 else:
                     if is_path_possible(cost_map, visited.copy(), start_n + n, end_n): #Checks starting from the node index where a connection was found
-                        #print('true')
+                        print('****Path possible: true')
                         return True
-    #print('false')
+    print('****Path possible: false')
     return False
 
 
-def is_dead_end(costs, node, visited, end_node ):
-    print('\nNode: ', node)
+def get_row_max(costs, node, visited, end_node ):
+    #print('\nNode: ', node)
     visited.append(node)
-    print('Visited: ', visited)
+    #print('Visited: ', visited)
     local_connections = []
     #dead_end = True
     list = np.array(costs[node][1:].copy())
-    print('list: ', list)
+    #print('list: ', list)
     while np.any(list):
         local_connections = []
         for index, cost in enumerate(list):
             if cost > 0 and index not in visited:
                 local_connections.append([index, cost])
 
-        print('Local connections: ', local_connections)
+        #print('Local connections: ', local_connections)
         if len(local_connections) == 0:
-            print('len(local_connections) == 0')
+            #print('len(local_connections) == 0')
             return []
 
         i, maximum = max(local_connections, key = operator.itemgetter(1))
-        print('i: ', i, 'Max: ', maximum)
+        #print('i: ', i, 'Max: ', maximum)
 
         if i == end_node:
-            print('reached end_node')
+            #print('reached end_node')
             return i
         else:
             visited.append(i)
-            if not is_dead_end(costs, i, visited.copy(), end_node):
+            if not get_row_max(costs, i, visited.copy(), end_node):
                 list[i] = 0
             else:
                 return i
-    print('all zero')
+    #print('all zero')
     return []
 
 
@@ -161,5 +167,5 @@ last_node = max(np.array(data_map)[:, 0])
 print('start: ', start_node, ' last: ', last_node)
 #print('Is path possible: ', is_path_possible(data_map, [], start_node, last_node))
 result = iteraction(data_map, start_node, last_node)
-print(result)
+print('\n\n',result)
 print('Resultado: ', get_result(result, last_node))
